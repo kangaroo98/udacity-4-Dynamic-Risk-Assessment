@@ -90,7 +90,6 @@ def version_score(score: Score, score_list_pth: str, new_version: boolean=True) 
     return new_score['version']
 
 
-
 #################Function for model scoring
 def scoring(mode, model, X_test, y_test) -> Score:
 

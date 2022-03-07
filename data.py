@@ -23,7 +23,7 @@ def load_prepare_data(csv_pth: str, test_data_split: float = 0) -> (pd.DataFrame
     return X_train, X_test, y_train, y_test
 
 
-def preprocess(df: pd.DataFrame, test_data_split: float) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
+def preprocess(df: pd.DataFrame, test_data_split: float = 0) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
 
     # Feature and label extraction
     y = df['exited'].values.reshape(-1,1)
