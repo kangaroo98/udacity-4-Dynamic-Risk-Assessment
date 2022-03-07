@@ -8,5 +8,6 @@
   "ingested_files": "ingestedfiles.txt",
   "model": "trainedmodel.pkl",
   "test_data": "testdata.csv",
-  "scores": "latestscores.txt"
+  "scores": "latestscores.txt",
+  "confusionmatrix": "confusionmatrix.png"
 }

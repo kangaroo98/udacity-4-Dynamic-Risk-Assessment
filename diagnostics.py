@@ -29,7 +29,7 @@ with open('config.json','r') as f:
     config = json.load(f) 
 
 
-def model_predictions(model_pth: str, dataset: pd.DataFrame) -> pd.array:
+def model_predictions(model_pth: str, dataset: pd.DataFrame) -> (np.ndarray, np.ndarray):
     '''
     Function to get model prediction. Returns prediction array for each row of the 
     input feature dataset.
@@ -42,7 +42,7 @@ def model_predictions(model_pth: str, dataset: pd.DataFrame) -> pd.array:
     # prepare data, no dataset split 
     X, _, y, _ = preprocess(dataset)
     
-    return model.predict(X)
+    return model.predict(X), y
     
 
 def dataframe_summary(dataset: pd.DataFrame) -> dict:
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     try:
         # model predictions
         df = pd.read_csv(os.path.join(config['test_data_path'], config['test_data']))
-        preds = model_predictions(os.path.join(config['prod_deployment_path'], config['model']), df)
+        preds, _ = model_predictions(os.path.join(config['prod_deployment_path'], config['model']), df)
         logger.info(f"Predictions: {preds}")
 
         # statistic summary
