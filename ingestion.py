@@ -1,10 +1,13 @@
+'''
+Step 1 - Data Ingestion
+
+Author: Oliver
+Date: 2022, March
+
+'''
 import pandas as pd
-import numpy as np
 import os
 import json
-from datetime import datetime
-import typing
-
 
 # initialize logging
 import logging 
@@ -27,18 +30,24 @@ ingested_files = config['ingested_files']
 
 
 def append_dataset(file_name: str, dataset: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Scan the filename for an appropriate type and append the new dataset
+    Input:
+    file_name: str
+    dataset: pd.DataFrame
     
+    Output:
+    pd.DataFrame
+    '''
     logger.info(f"File name: {str(file_name)}")            
     if (file_name[-3:] == 'csv'):
-        logger.info(f"Append csv file: {file_name}")
         tmp = pd.read_csv(file_name)
-        logger.info(f"Append dataset: {tmp.shape}")
         appended_dataset = tmp if dataset.empty else dataset.append(tmp)
+        logger.info(f"Appended csv file: {file_name} Size of dataset: {tmp.shape}")
     elif (file_name[-4:] == 'json'):
-        logger.info(f"Append json file: {file_name}")
         tmp = pd.read_json(file_name)
-        logger.info(f"Append dataset: {tmp.shape}")
         appended_dataset = tmp if dataset.empty else dataset.append(tmp)
+        logger.info(f"Appended json file: {file_name} Size of dataset: {tmp.shape}")
     else:
         raise UnsupportedFileType("Detected unsupported file type")
     
@@ -46,18 +55,24 @@ def append_dataset(file_name: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
 
 def merge_dataset(file_name: str, dataset: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Scan the filename for an appropriate type and merge the new dataset
+    Input:
+    file_name: str 
+    dataset: pd.DataFrame
     
+    Output:
+    pd.DataFrame
+    '''
     logger.info(f"File name: {str(file_name)}")            
-    if (file_name[-3:] == 'csv'):
-        logger.info(f"Merge csv file: {file_name}")
+    if (file_name[-3:] == 'csv'):    
         tmp = pd.read_csv(file_name)
-        logger.info(f"Merged dataset: {tmp.shape}")
         merged_dataset = tmp if dataset.empty else dataset.merge(tmp, how='outer')
+        logger.info(f"Merged csv file: {file_name} with size {tmp.shape}")
     elif (file_name[-4:] == 'json'):
-        logger.info(f"Merge json file: {file_name}")
         tmp = pd.read_json(file_name)
-        logger.info(f"Merged dataset: {tmp.shape}")
         merged_dataset = tmp if dataset.empty else dataset.merge(tmp, how='outer')
+        logger.info(f"Merged json file: {file_name} with size {tmp.shape}")
     else:
         raise UnsupportedFileType("Detected unsupported file type")
     
@@ -65,7 +80,9 @@ def merge_dataset(file_name: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
 
 def ingest_directory(directory_name: str, dataset: pd.DataFrame = pd.DataFrame(), file_list: list = []) -> (pd.DataFrame,list):
-    
+    '''
+    Recursively scan the directory for files and append / merge the data into one dataset
+    '''
     logger.info(f"CurrentDirList: {os.listdir(directory_name)}")
 
     for item in os.listdir(directory_name):
@@ -92,7 +109,9 @@ def ingest_directory(directory_name: str, dataset: pd.DataFrame = pd.DataFrame()
 
 
 def clean_dataset(dataset: pd.DataFrame):
-    
+    '''
+    Clean the dataset by removing duplicates. The dataset is changed 'inplace'. 
+    '''
     # drop all duplicated records
     logger.info(f"Cleaning dataset size: {dataset.shape}")
     if (dataset.duplicated().any()):
@@ -107,7 +126,10 @@ def clean_dataset(dataset: pd.DataFrame):
 def save_dataset(
         dataset: pd.DataFrame, file_list: list, 
         directory_name: str, dataset_file_name: str, ingested_file_name: str):
-    
+    '''
+    Save the datset to file (dataset -> directory_name/dataset_file_name). 
+    Also save the list of file names the dataset was built of (file_list -> directory_name/ingested_file_name).
+    '''
     # write the merged dataset to file (define the dir in config.json)
     cleaned_pth = os.path.join(directory_name, dataset_file_name)
     logger.info(f"directory: {directory_name} file: {dataset_file_name} path: {cleaned_pth}")
@@ -120,7 +142,9 @@ def save_dataset(
 
 
 def merge_multiple_dataframe():
-    
+    '''
+    Merge all files and corresponding dataset to one dataset, clean and save it for further processing. 
+    '''
     # Merging the data 
     working_dir = "." #os.getcwd()
     merged_dataset, merged_files = ingest_directory(os.path.join(working_dir, input_folder_path))

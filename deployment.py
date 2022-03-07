@@ -1,3 +1,10 @@
+'''
+Step 2 - Training, Scoring, and Deploying an ML Model
+
+Author: Oliver
+Date: 2022, March
+
+'''
 import os
 import json
 import shutil
@@ -16,13 +23,13 @@ with open('config.json','r') as f:
     config = json.load(f) 
 
 
-score_list_path = os.path.join(config['output_model_path'], config['scores'])
-
 
 ####################function for deployment
 
 def deploy_model_score(score_list_pth: str, version: int, dest: str):
-
+    '''
+    Deploy the model score by version number to the dest path.
+    '''
     # get all train and test scores of the model version and save in dest
     logger.info(f"Model version: {version} destination: {dest}")
     scores = get_model_scores(score_list_pth, version)
@@ -32,7 +39,9 @@ def deploy_model_score(score_list_pth: str, version: int, dest: str):
 
 
 def deploy_model(version: int, model_src: str, ingest_src: str, score_list_pth: str, dest: str):
-    
+    '''
+    Deploy all model artifacts by version.
+    '''
     # model file
     shutil.copy(model_src, dest)
 
@@ -51,6 +60,7 @@ if __name__ == '__main__':
         #copy the latest pickle file, the latestscore.txt value, and the ingestfiles.txt file into the deployment directory
         working_dir = "." #os.getcwd()
         version = get_model_last_version(os.path.join(config['output_model_path'], config['scores']))
+
         deploy_model(
             version, 
             os.path.join(working_dir, config['output_model_path'], config['model']),
