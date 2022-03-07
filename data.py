@@ -1,3 +1,10 @@
+'''
+Step 2 - Training, Scoring, and Deploying an ML Model
+
+Author: Oliver
+Date: 2022, March
+
+'''
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -10,10 +17,14 @@ logger = logging.getLogger()
 
 
 def load_prepare_data(csv_pth: str, test_data_split: float = 0) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
-
+    '''
+    Load the dataset from csv_pth. If the test_data_split attribute is not >0, the dataset is preprocessed 
+    and returned as a whole. 
+    '''
     # Actually the cleaned_data should be split into train/validate/test data. But since test data 
     # is provided, I assumed that the initially ingested data is supposed to be the training/validation data only,
     # testing is done by using the provided testdata.
+
     # load the test dataset
     df = pd.read_csv(csv_pth)
 
@@ -23,8 +34,10 @@ def load_prepare_data(csv_pth: str, test_data_split: float = 0) -> (pd.DataFrame
     return X_train, X_test, y_train, y_test
 
 
-def preprocess(df: pd.DataFrame, test_data_split: float) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
-
+def preprocess(df: pd.DataFrame, test_data_split: float = 0) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    '''
+    Feature extracting and train and validation/test dataset split
+    '''
     # Feature and label extraction
     y = df['exited'].values.reshape(-1,1)
     X = df[['lastmonth_activity','lastyear_activity','number_of_employees']].values.reshape(-1,3)

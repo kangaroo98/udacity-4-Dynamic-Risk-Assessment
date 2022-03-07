@@ -1,3 +1,10 @@
+'''
+Step 2 - Training, Scoring, and Deploying an ML Model
+
+Author: Oliver
+Date: 2022, March
+
+'''
 import os
 from xmlrpc.client import boolean
 import joblib
@@ -23,7 +30,10 @@ with open('config.json','r') as f:
 
 
 def get_model_scores(score_list_pth: str, version) -> list:
-
+    '''
+    Read and return the list of all scores from score_list_pth,
+    containing all scores captured during training and testing.
+    '''
     # load versioned scores
     scores = load_score_list(score_list_pth)
     rec_scores = []
@@ -38,7 +48,9 @@ def get_model_scores(score_list_pth: str, version) -> list:
 
 
 def get_model_last_version(score_list_pth: str) -> int:
-
+    '''
+    Return the most recent version number.
+    '''
     # load versioned scores
     scores = load_score_list(score_list_pth)
 
@@ -52,7 +64,9 @@ def get_model_last_version(score_list_pth: str) -> int:
 
 
 def load_score_list(score_list_pth: str) -> list:
-    
+    '''
+    Load and return the list of scores.
+    '''
     # load all model scores
     scores=[]
     if os.path.isfile(score_list_pth):
@@ -65,13 +79,20 @@ def load_score_list(score_list_pth: str) -> list:
 
 
 def save_score_list(score_list_pth: str, score_list: list):
+    '''
+    Save the list of scores.
+    '''
     # save the score_list in the pth dir
     with open(score_list_pth, 'w') as f:
         json.dump(score_list, f)
 
 
 def version_score(score: Score, score_list_pth: str, new_version: boolean=True) -> int:
-
+    '''
+    Add a new score. By default the score is versioned with a new version number increment. 
+    But if new_version is set to False the recent version number is used. This is used to 
+    save a history of test scores to the most recent model version (just for myself to practice ;-).  
+    '''
     # read current scores 
     scores = load_score_list(score_list_pth)
 
@@ -90,10 +111,10 @@ def version_score(score: Score, score_list_pth: str, new_version: boolean=True) 
     return new_score['version']
 
 
-
-#################Function for model scoring
 def scoring(mode, model, X_test, y_test) -> Score:
-
+    '''
+    Predicting a feature dataset and returning a Score (pydantic model defined in config.py) 
+    '''
     #this function should take a trained model, load test data, and calculate an F1 score for the model relative to the test data
     #it should write the result to the latestscore.txt file
 
@@ -106,10 +127,10 @@ def scoring(mode, model, X_test, y_test) -> Score:
 
 
 def score_model(model_path: str, score_list_pth: str):
-
+    '''
     #this function should take a trained model, load test data, and calculate an F1 score for the model relative to the test data
     #it should write the result to the latestscore.txt file
-
+    '''    
     # load the trained model
     model = joblib.load(model_path)
     

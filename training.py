@@ -1,3 +1,10 @@
+'''
+Step 2 - Training, Scoring, and Deploying an ML Model
+
+Author: Oliver
+Date: 2022, March
+
+'''
 import os
 import joblib
 import json
@@ -22,7 +29,10 @@ with open('config.json','r') as f:
 
 #################Function for training the model
 def train_model(clean_data_pth: str, score_list_pth: str, model_dir: str):
-
+    '''
+    Train the model with the ingested and cleaned data. The model is scored and versioned if score 
+    is higher as a threshold (currently static). Model version is added to the filename.
+    '''
     X_train, X_val, y_train, y_val = load_prepare_data(clean_data_pth, 0.2)
 
     logger.info(f"Train Features: {X_train.shape}")
