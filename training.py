@@ -21,7 +21,7 @@ with open('config.json','r') as f:
 
 
 #################Function for training the model
-def train_model(clean_data_pth: str, model_dir: str):
+def train_model(clean_data_pth: str, score_list_pth: str, model_dir: str):
 
     X_train, X_val, y_train, y_val = load_prepare_data(clean_data_pth, 0.2)
 
@@ -46,7 +46,7 @@ def train_model(clean_data_pth: str, model_dir: str):
 
     # version the model if the score exceeds threshold
     if (score['score'] > 0.6):
-        version = version_score(score)
+        version = version_score(score, score_list_pth)
 
         #write the trained model to your workspace in a file called trainedmodel.pkl (see config.json)
         joblib.dump(model, os.path.join(model_dir, f"v{version}_{config['model']}"))
@@ -58,7 +58,8 @@ if __name__ == '__main__':
     try:
         # train the model
         train_model(
-            os.path.join(config['output_folder_path'], config['cleaned_data']), 
+            os.path.join(config['output_folder_path'], config['cleaned_data']),
+            os.path.join(config['output_model_path'], config['scores']), 
             os.path.join(config['output_model_path'])
         )
     except Exception as err:
