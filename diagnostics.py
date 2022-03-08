@@ -1,5 +1,5 @@
 '''
-Step 3 - Model and Data Diagnostics
+Step 3 - Diagnostics
 
 Author: Oliver
 Date: 2022, March
@@ -63,13 +63,13 @@ def dataframe_summary(dataset: pd.DataFrame) -> dict:
     return summary
 
 
-def missing_data(dataset: pd.DataFrame) -> pd.Series:
+def missing_data(dataset: pd.DataFrame) -> dict:
     '''
     Calculates the percentage of missing values. 
     '''
     # calculate the percentage of missing values
     na_percent = dataset.isna().sum()/len(dataset)    
-    return na_percent
+    return na_percent.to_dict()
 
 
 def execution_time_v2() -> dict:
@@ -115,8 +115,8 @@ def outdated_packages_list():
     outdated = subprocess.check_output(['python','-m','pip', 'list', '--outdated'])
     with open('outdated.txt', 'wb') as f:
        f.write(outdated)
-    # logger.info(f"Check: {outdated}")
-    return 
+    
+    return outdated
 
 
 if __name__ == '__main__':
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # model predictions
         df = pd.read_csv(os.path.join(config['test_data_path'], config['test_data']))
         preds, _ = model_predictions(os.path.join(config['prod_deployment_path'], config['model']), df)
-        logger.info(f"Predictions: {preds}")
+        logger.info(f"Predictions: {preds} pth: {os.path.join(config['test_data_path'], config['test_data'])}")
 
         # statistic summary
         df = pd.read_csv(os.path.join(config['output_folder_path'], config['cleaned_data']))
@@ -139,7 +139,8 @@ if __name__ == '__main__':
         duration = execution_time_v2()
         logger.info(f"Execution time v2: {duration}")
 
-        outdated_packages_list()
+        #outdated = outdated_packages_list()
+        #logger.info(f"Check: {outdated}")
     
     except Exception as err:
         print(f"Diagnositcs Main Error: {err}")   

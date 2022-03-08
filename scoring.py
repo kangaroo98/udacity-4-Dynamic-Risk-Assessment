@@ -102,6 +102,9 @@ def version_score(score: Score, score_list_pth: str, new_version: boolean=True) 
         rec_score = max(scores, key=lambda x:x['version']) 
         logger.info(f"Most recent version (list count: {len(scores)}): {rec_score}")
         new_score['version'] = (rec_score['version'] + 1) if new_version else rec_score['version']
+    else:
+        new_score['version'] = 1 if new_version else 0
+
 
     # add/save the new score
     scores.append(new_score)
@@ -126,7 +129,7 @@ def scoring(mode, model, X_test, y_test) -> Score:
     return score
 
 
-def score_model(model_path: str, score_list_pth: str):
+def score_model(model_path: str, data_pth: str) -> Score:
     '''
     #this function should take a trained model, load test data, and calculate an F1 score for the model relative to the test data
     #it should write the result to the latestscore.txt file
@@ -135,21 +138,22 @@ def score_model(model_path: str, score_list_pth: str):
     model = joblib.load(model_path)
     
     # load and prepare test data, no dataset split 
-    X_test, _, y_test, _ = load_prepare_data(os.path.join(config['test_data_path'], config['test_data']))
+    X_test, _, y_test, _ = load_prepare_data(data_pth)
     
     # score the model
-    score = scoring('test', model, X_test, y_test)
-
-    # write the score to file for further reference
-    version = version_score(score, score_list_pth, False)#
-    logger.info(f"Tested model with F1 score {score} saved as version: {version}")
+    return scoring('test', model, X_test, y_test)
 
 
 if __name__ == '__main__':
     try:
-        score_model(
-            os.path.join(config['output_model_path'], config['model']), 
-            os.path.join(config['output_model_path'], config['scores'])
+        score_obj = score_model(
+            os.path.join(config['output_model_path'], config['model']),
+            os.path.join(config['test_data_path'], config['test_data'])
         )
+        logger.info(f"Tested model with F1 score {score_obj} saved as version: {score_obj['version']}")
+
+        # write the score to file for further reference
+        version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
+
     except Exception as err:
         print(f"Scoring Main Error: {err}")
