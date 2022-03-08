@@ -8,6 +8,8 @@ Date: 2022, March
 import os
 import joblib
 import json
+import pandas as pd
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from scoring import scoring, version_score
@@ -26,6 +28,20 @@ logger = logging.getLogger()
 with open('config.json','r') as f:
     config = json.load(f) 
 
+def model_predictions(model_pth: str, dataset: pd.DataFrame) -> (np.ndarray, np.ndarray):
+    '''
+    Function to get model prediction. Returns prediction array for each row of the 
+    input feature dataset.
+    '''
+    #read the deployed model and a test dataset, calculate predictions
+
+    # load the trained model
+    model = joblib.load(model_pth)
+    
+    # prepare data, no dataset split 
+    X, _, y, _ = preprocess(dataset)
+    
+    return model.predict(X), y
 
 #################Function for training the model
 def train_model(clean_data_pth: str, score_list_pth: str, model_dir: str):

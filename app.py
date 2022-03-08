@@ -18,8 +18,8 @@ import os
 from diagnostics import dataframe_summary
 from diagnostics import execution_time
 from diagnostics import missing_data
-from diagnostics import model_predictions
 from diagnostics import outdated_packages_list
+from training import model_predictions
 from scoring import score_model
 from config import Score
 

@@ -6,7 +6,6 @@ Date: 2022, March
 
 '''
 import os
-from xmlrpc.client import boolean
 import joblib
 import json
 from datetime import datetime
@@ -29,7 +28,7 @@ with open('config.json','r') as f:
     config = json.load(f) 
 
 
-def get_model_scores(score_list_pth: str, version) -> list:
+def get_model_scores(score_list_pth: str, version: int) -> list:
     '''
     Read and return the list of all scores from score_list_pth,
     containing all scores captured during training and testing.
@@ -47,9 +46,9 @@ def get_model_scores(score_list_pth: str, version) -> list:
     return None
 
 
-def get_model_last_version(score_list_pth: str) -> int:
+def get_model_last_version_score(score_list_pth: str) -> Score:
     '''
-    Return the most recent version number.
+    Return the scor of the most recent version.
     '''
     # load versioned scores
     scores = load_score_list(score_list_pth)
@@ -60,8 +59,16 @@ def get_model_last_version(score_list_pth: str) -> int:
 
     rec_score = max(scores, key=lambda x:x['version']) 
     logger.info(f"Most recent version (list count: {len(scores)}): {rec_score}")
-    return rec_score['version']
+    
+    return rec_score
 
+def get_model_last_version(score_list_pth: str) -> int:
+    '''
+    Return the most recent version number.
+    '''
+    score = get_model_last_version_score(score_list_pth)
+    
+    return score['version']
 
 def load_score_list(score_list_pth: str) -> list:
     '''
@@ -87,7 +94,7 @@ def save_score_list(score_list_pth: str, score_list: list):
         json.dump(score_list, f)
 
 
-def version_score(score: Score, score_list_pth: str, new_version: boolean=True) -> int:
+def version_score(score: Score, score_list_pth: str, new_version: bool=True) -> int:
     '''
     Add a new score. By default the score is versioned with a new version number increment. 
     But if new_version is set to False the recent version number is used. This is used to 

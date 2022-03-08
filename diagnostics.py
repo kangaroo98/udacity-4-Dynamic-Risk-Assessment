@@ -10,12 +10,13 @@ import numpy as np
 import timeit
 import os
 import json
-import joblib
 import subprocess
 
-from data import preprocess
 from training import train_model
 from ingestion import merge_multiple_dataframe
+from training import model_predictions
+
+from config import Score
 
 # initialize logging
 import logging 
@@ -27,23 +28,7 @@ logger = logging.getLogger()
 ##################Load config.json and get environment variables
 with open('config.json','r') as f:
     config = json.load(f) 
-
-
-def model_predictions(model_pth: str, dataset: pd.DataFrame) -> (np.ndarray, np.ndarray):
-    '''
-    Function to get model prediction. Returns prediction array for each row of the 
-    input feature dataset.
-    '''
-    #read the deployed model and a test dataset, calculate predictions
-
-    # load the trained model
-    model = joblib.load(model_pth)
-    
-    # prepare data, no dataset split 
-    X, _, y, _ = preprocess(dataset)
-    
-    return model.predict(X), y
-    
+   
 
 def dataframe_summary(dataset: pd.DataFrame) -> dict:
     '''
@@ -117,6 +102,7 @@ def outdated_packages_list():
        f.write(outdated)
     
     return outdated
+
 
 
 if __name__ == '__main__':
