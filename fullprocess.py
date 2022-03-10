@@ -128,6 +128,10 @@ def process_automation():
             logger.info(f"Reporting based on model {os.path.join(config['prod_deployment_path'], config['model'])}")
 
             os.system("python3 apicalls.py")
+        else:
+            logger.info("No model drift detected.")
+    else:
+        logger.info("No new data change detected.")
 
 
 if __name__ == '__main__':

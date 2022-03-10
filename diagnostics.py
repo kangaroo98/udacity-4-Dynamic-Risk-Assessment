@@ -93,6 +93,7 @@ def diagnostics(testdata_pth: str, prod_depl_model_pth: str, test_dataset_pth: s
     # model predictions
     df = pd.read_csv(testdata_pth)
     preds, _ = model_predictions(prod_depl_model_pth, df)
+    logger.info(f"Predictions: {preds}")
 
     # statistic summary
     df = pd.read_csv(test_dataset_pth)
@@ -105,8 +106,8 @@ def diagnostics(testdata_pth: str, prod_depl_model_pth: str, test_dataset_pth: s
     duration = execution_time()
     logger.info(f"Execution time: {duration}")
 
-    #outdated = outdated_packages_list()
-    #logger.info(f"Check: {outdated}")
+    outdated = outdated_packages_list()
+    logger.info(f"Check: {outdated}")
     
 
 

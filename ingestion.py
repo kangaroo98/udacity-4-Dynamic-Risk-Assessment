@@ -186,7 +186,10 @@ def check_4_newdata(ingested_pth:str, data_dir: str) -> set:
     current_filenames, _ = merge_directory(data_dir)
     logger.info(f"Current file name list: {current_filenames}")
 
-    return  set(current_filenames).difference(set(ingested_filenames))
+    if (ingested_filenames is None):
+        return current_filenames
+    
+    return  current_filenames.difference(ingested_filenames) 
 
 
 def merge_multiple_dataframe(
