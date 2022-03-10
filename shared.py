@@ -5,7 +5,14 @@ Author: Oliver
 Date: 2022, March
 
 '''
+import os
+import json
+from datetime import datetime
 import pandas as pd
+from pydantic import BaseModel
+from typing import Literal, Union 
+from shtab import Optional
+
 from sklearn.model_selection import train_test_split
 
 # initialize logging
@@ -13,9 +20,40 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
-# Exception handling
+
+# pydantic model
+METRIC = Literal['F1', 'MAE', 'SSE']
+MODE = Literal['train','test']
+
+class Score(BaseModel):
+    version: int = None 
+    mode: MODE
+    timestamp: datetime
+    metric: METRIC
+    score: float
+    
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+# # Exception handling - define user-defined exceptions
+class AppError(Exception):
+    """Base class for other exceptions"""
+    pass
+
+class UnsupportedFileType(AppError):
+    """Base class for other exceptions"""
+    pass
+
+class FileInvalid(AppError):
+    """Base class for other exceptions"""
+    pass
+
+class DeploymentFailed(AppError):
+    """Base class for other exceptions"""
+    pass
 
 
+# data preparation
 def load_prepare_data(csv_pth: str, test_data_split: float = 0) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
     '''
     Load the dataset from csv_pth. If the test_data_split attribute is not >0, the dataset is preprocessed 

@@ -1,5 +1,5 @@
 {
-  "input_folder_path": "sourcedata",
+  "input_folder_path": "practicedata",
   "output_folder_path": "ingesteddata",
   "test_data_path": "testdata",
   "output_model_path": "models",

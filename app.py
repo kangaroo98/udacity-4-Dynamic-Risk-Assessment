@@ -21,16 +21,25 @@ from diagnostics import missing_data
 from diagnostics import outdated_packages_list
 from training import model_predictions
 from scoring import score_model
-from config import Score
+from shared import Score
 
 ######################Set up variables for use in our script
 app = Flask(__name__)
 app.secret_key = '1652d576-484a-49fd-913a-6879acfa6ba4'
 
-with open('config.json','r') as f:
-    config = json.load(f) 
+# initialization
+import logging 
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
+logger = logging.getLogger()
 
-UPLOAD_DIRECTORY = config['prod_deployment_path']
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
 
 #######################Prediction Endpoint
 @app.route("/prediction", methods=['GET','POST','OPTIONS'])
@@ -51,7 +60,7 @@ def predict():
 @app.route("/prediction2", methods=['GET','POST','OPTIONS'])
 def predict2():        
     if request.method == 'POST':
-        upload_pth = os.path.join(UPLOAD_DIRECTORY, "tmp.csv")
+        upload_pth = os.path.join(config['prod_deployment_path'], "tmp.csv")
         with open(upload_pth, "wb") as f:
             f.write(request.data)
         df = pd.read_csv(upload_pth)
@@ -70,7 +79,7 @@ def predict2():
 def predict3():        
     if request.method == 'POST':
         
-        tmp_pth = os.path.join(UPLOAD_DIRECTORY, "tmp3.csv")
+        tmp_pth = os.path.join(config['prod_deployment_path'], "tmp3.csv")
         content = request.files['dataset'].read()
         # save the file  
         with open(tmp_pth, "wb") as f:
@@ -122,5 +131,6 @@ def timing():
     #add return value for all diagnostics
     return jsonify(result_dict) 
 
-if __name__ == "__main__":    
+if __name__ == "__main__":   
+    init() 
     app.run(host='0.0.0.0', port=8000, debug=True, threaded=True)

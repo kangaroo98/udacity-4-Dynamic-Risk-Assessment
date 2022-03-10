@@ -12,20 +12,34 @@ from datetime import datetime
 
 from sklearn.metrics import f1_score
 
-from config import Score 
-from data import load_prepare_data
+from shared import Score 
+from shared import load_prepare_data
 
-# initialize logging
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
+
 # Exception handling
-from config import FileInvalid 
+from shared import FileInvalid 
 
 #################Load config.json and get path variables
-with open('config.json','r') as f:
-    config = json.load(f) 
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    logger.info(f"Current working dir: {os.getcwd()}")
+    with open('config.json','r') as f:
+         config = json.load(f)
 
 
 def get_model_scores(score_list_pth: str, version: int) -> list:
@@ -130,10 +144,12 @@ def scoring(mode, model, X_test, y_test) -> Score:
 
     # scoring
     preds = model.predict(X_test)
-    score = Score(mode=mode, metric='F1', score=f1_score(y_test, preds), timestamp=datetime.now())
+    test=f1_score(y_test, preds)
+    score_res = Score(mode=mode, metric='F1', score=f1_score(y_test, preds), timestamp=datetime.now())
+    logger.info(f"Tested model with X_test {X_test} resulted in preds {preds} vs act {y_test} and score {test}")
 
     # write the score to file for further reference
-    return score
+    return score_res
 
 
 def score_model(model_path: str, data_pth: str) -> Score:
@@ -153,14 +169,16 @@ def score_model(model_path: str, data_pth: str) -> Score:
 
 if __name__ == '__main__':
     try:
+        init() 
+
         score_obj = score_model(
             os.path.join(config['output_model_path'], config['model']),
             os.path.join(config['test_data_path'], config['test_data'])
         )
-        logger.info(f"Tested model with F1 score {score_obj} saved as version: {score_obj['version']}")
 
-        # write the score to file for further reference
+        # version the score to file for further reference
         version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
+        logger.info(f"Tested model with F1 score {score_obj} saved as version: {score_obj['version']}")
 
     except Exception as err:
         print(f"Scoring Main Error: {err}")

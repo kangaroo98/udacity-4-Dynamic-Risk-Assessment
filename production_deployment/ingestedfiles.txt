@@ -1,2 +1,0 @@
-./practicedata/dataset1.csv
-./practicedata/datasets/dataset2.csv

@@ -9,24 +9,22 @@ import pandas as pd
 import os
 import json
 
-# initialize logging
+# Shared items
+from shared import UnsupportedFileType  
+
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
-# Exception handling
-from config import UnsupportedFileType
-
-
-#############Load config.json and get input and output paths
-with open('config.json','r') as f:
-    config = json.load(f) 
-
-input_folder_path = config['input_folder_path']
-output_folder_path = config['output_folder_path']
-cleaned_data = config['cleaned_data']
-ingested_files = config['ingested_files']
-
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
 
 
 def check_and_append(file_name: str, append: bool, dataset: pd.DataFrame) -> pd.DataFrame:
@@ -166,13 +164,13 @@ def save_dataset(
     save_ingestedfiles(os.path.join(directory_name, ingested_file_name), file_list)
     
 
-def merge_multiple_dataframe():
+def merge_multiple_dataframe(dataset_pth: str, src_dir: str, dest_dir: str, dest_data_filename: str, dest_ingest_filename: str):
     '''
     Merge all files and corresponding dataset to one dataset, clean and save it for further processing. 
     '''
-    # Merging the data 
-    #working_dir = "." #os.getcwd()
-    merged_files, merged_dataset = merge_directory(os.path.join(input_folder_path), True)
+    # Merging the data
+    df = pd.read_csv(dataset_pth) if (os.path.isfile(dataset_pth)) else None
+    merged_files, merged_dataset = merge_directory(src_dir, True, df)
     logger.info(f"Merged files in ingest_directory: {merged_files}")
 
     # Cleaning the merged dataset            
@@ -180,14 +178,19 @@ def merge_multiple_dataframe():
 
     # Save the cleand dataaset
     save_dataset(
-        merged_dataset, merged_files,
-        os.path.join(output_folder_path),
-        cleaned_data, ingested_files
-    )
+        merged_dataset, merged_files, dest_dir, dest_data_filename, dest_ingest_filename )
  
 
 if __name__ == '__main__':
     try:
-        merge_multiple_dataframe()
+        init()
+        merge_multiple_dataframe(
+            os.path.join(config["output_folder_path"], config['cleaned_data']),
+            os.path.join(config['input_folder_path']),
+            os.path.join(config['output_folder_path']),
+            config['cleaned_data'],
+            config['ingested_files']
+        )
+
     except Exception as err:
         print(f"Ingestion Main Error: {err}")

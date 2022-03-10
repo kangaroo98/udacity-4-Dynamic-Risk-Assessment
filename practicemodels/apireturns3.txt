@@ -1,1 +1,0 @@
-{"exited": {"mean": 0.5769230769230769, "median": 1.0, "std": 0.5038314736557788}, "lastmonth_activity": {"mean": 165.65384615384616, "median": 73.0, "std": 284.0332293669447}, "lastyear_activity": {"mean": 1502.923076923077, "median": 955.0, "std": 2192.6449584568304}, "number_of_employees": {"mean": 26.884615384615383, "median": 14.0, "std": 31.353885785435814}}
