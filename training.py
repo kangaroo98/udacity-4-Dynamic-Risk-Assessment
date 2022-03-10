@@ -33,15 +33,6 @@ def init():
 # Exception handling
 
 
-###################Load config.json and get path variables
-config = {}
-def init():
-    global config
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    logger.info(f"Current working dir: {os.getcwd()}")
-    with open('config.json','r') as f:
-         config = json.load(f)
-
 
 def model_predictions(model_pth: str, dataset: pd.DataFrame) -> (np.ndarray, np.ndarray):
     '''

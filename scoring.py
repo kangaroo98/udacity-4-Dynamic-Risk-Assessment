@@ -32,15 +32,6 @@ def init():
 # Exception handling
 from shared import FileInvalid 
 
-#################Load config.json and get path variables
-config = {}
-def init():
-    global config
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    logger.info(f"Current working dir: {os.getcwd()}")
-    with open('config.json','r') as f:
-         config = json.load(f)
-
 
 def get_model_scores(score_list_pth: str, version: int) -> list:
     '''
@@ -58,7 +49,6 @@ def get_model_scores(score_list_pth: str, version: int) -> list:
         return rec_scores
     
     return None
-
 
 def get_model_last_version_score(score_list_pth: str) -> Score:
     '''
@@ -131,7 +121,7 @@ def version_score(score: Score, score_list_pth: str, new_version: bool=True) -> 
     scores.append(new_score)
     save_score_list(score_list_pth, scores)
 
-    logger.info(f"Score ({new_score}) added to list {scores} and saved in {score_list_pth}")
+    logger.info(f"Score ({new_score}) added to list (version_flag {new_version}) and saved in {score_list_pth}")
     return new_score['version']
 
 
@@ -171,14 +161,16 @@ if __name__ == '__main__':
     try:
         init() 
 
+        last_version = get_model_last_version(os.path.join(config['output_model_path'], config['scores']))
+
         score_obj = score_model(
-            os.path.join(config['output_model_path'], config['model']),
+            os.path.join(config['output_model_path'], f"v{last_version}_{config['model']}"),
             os.path.join(config['test_data_path'], config['test_data'])
         )
 
         # version the score to file for further reference
-        version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
-        logger.info(f"Tested model with F1 score {score_obj} saved as version: {score_obj['version']}")
+        new_version = version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
+        logger.info(f"Tested model version {last_version} with F1 score {score_obj}. Score (mode: {score_obj['mode']}) saved as version: {new_version}")
 
     except Exception as err:
         print(f"Scoring Main Error: {err}")
