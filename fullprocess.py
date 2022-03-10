@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from ingestion import merge_directory, load_ingestedfiles, merge_multiple_dataframe
+from ingestion import merge_directory, load_ingestedfiles, merge_multiple_dataframe, check_4_newdata
 from reporting import reporting
 from scoring import get_model_last_version_score, get_model_scores,score_model, get_model_last_version
 from training import train_model
@@ -27,23 +27,6 @@ def init():
     logger.info(f"Config dictionary: {config}")
 
 
-
-def check_4_newdata() -> list:
-    '''
-    Check for new data to ingest. Returns a list of new files.
-    '''
-    ##################Check and read new data
-    #first, read ingestedfiles.txt
-    ingested_files = load_ingestedfiles(os.path.join(config['output_folder_path'], config['ingested_files']))
-    logger.info(f"Ingested file name list: {ingested_files}")
-
-    #second, determine whether the source data folder has files that aren't listed in ingestedfiles.txt
-    current_files, _ = merge_directory(os.path.join(config['input_folder_path']))
-    logger.info(f"Current file name list: {current_files}")
-
-    return  list(set(current_files).difference(set(ingested_files)))
-
-
 def check_4_modeldrift(hist_score_list: list, new_score: Score) -> bool:
     '''
     Check if model drift occurred.
@@ -64,11 +47,18 @@ def check_4_modeldrift(hist_score_list: list, new_score: Score) -> bool:
 
 
 def process_automation():
+    '''
+    Automation of the deployment process if new data is provided.
+    '''
+    new_files = check_4_newdata(
+        os.path.join(config["output_folder_path"], config['ingested_files']), 
+        os.path.join(config['input_folder_path'])
+    )
     
-    new_files = check_4_newdata()
-    logger.info(f"Files not yet ingested: {new_files}")
 
     if len(new_files) > 0:
+        # new data detected
+        logger.info(f"Files not yet ingested: {new_files}")
 
         # ingest the new data
         merge_multiple_dataframe(
@@ -98,7 +88,7 @@ def process_automation():
                                 os.path.join(config['prod_deployment_path'], config['scores']),
                                 get_model_last_version(os.path.join(config['prod_deployment_path'], config['scores'])))
         
-        if check_4_modeldrift(hist_version_scores, ingested_model_score) or True:
+        if check_4_modeldrift(hist_version_scores, ingested_model_score):
             # Re-train the model
             train_score, version = train_model(
                 os.path.join(config['output_folder_path'], config['cleaned_data']),

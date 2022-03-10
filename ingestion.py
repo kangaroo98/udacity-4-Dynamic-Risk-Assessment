@@ -86,14 +86,14 @@ def merge_directory(
         directory_name: str, 
         create_dataset: bool = False, 
         dataset: pd.DataFrame = None, 
-        file_list: set = None) -> (set, pd.DataFrame):
+        ingested_filenames: set = None) -> (set, pd.DataFrame):
     '''
     Recursively scan the directory for files and append / merge the data into one dataset
     '''
     logger.info(f"CurrentDirList: {os.listdir(directory_name)}")
-    logger.info(f"File List: {file_list}")
-    if file_list is None:
-        file_list = set() 
+    logger.info(f"File List: {ingested_filenames}")
+    if ingested_filenames is None:
+        ingested_filenames = set() 
 
     for item in os.listdir(directory_name):
         
@@ -106,16 +106,16 @@ def merge_directory(
                 if (create_dataset):
                     dataset = check_and_merge(item_pth, create_dataset, dataset) 
                     #dataset = check_and_append(item_pth, create_dataset, dataset)
-                file_list.add(item_pth) 
+                ingested_filenames.add(item_pth) 
                 logger.info(f"Data appended (create_dataset: {create_dataset}")
             except UnsupportedFileType as err:
                 logger.error("Error: unsupported data type")                
 
         elif (os.path.isdir(item_pth)):
             logger.info("Directory detected")
-            file_list, dataset = merge_directory(item_pth, create_dataset, dataset, file_list)
+            ingested_filenames, dataset = merge_directory(item_pth, create_dataset, dataset, ingested_filenames)
     
-    return file_list, dataset 
+    return ingested_filenames, dataset 
 
 
 def clean_dataset(dataset: pd.DataFrame):
@@ -134,6 +134,9 @@ def clean_dataset(dataset: pd.DataFrame):
 
 
 def load_ingestedfiles(pth: str) -> set:
+    '''
+    Load the ingested file names into a set.
+    '''
     logger.info(f"Ingested file list path: {pth}")
     if (os.path.isfile(pth)):
         ingested_files = set()
@@ -145,14 +148,17 @@ def load_ingestedfiles(pth: str) -> set:
     return None
 
 
-def save_ingestedfiles(pth: str, file_list: set):
+def save_ingestedfiles(pth: str, ingested_filenames: set):
+    '''
+    Save the ingested files by name
+    '''
     with open(pth, 'w') as f:
-        for item in file_list:
+        for item in ingested_filenames:
             f.write("%s\n" % item)
 
 
 def save_dataset(
-        dataset: pd.DataFrame, file_list: set, 
+        dataset: pd.DataFrame, ingested_filenames: set, 
         directory_name: str, dataset_file_name: str, ingested_file_name: str):
     '''
     Save the datset to file (dataset -> directory_name/dataset_file_name). 
@@ -164,7 +170,7 @@ def save_dataset(
     dataset.to_csv(cleaned_pth, index=False)
 
     # write the merged files to file for further reference
-    save_ingestedfiles(os.path.join(directory_name, ingested_file_name), file_list)
+    save_ingestedfiles(os.path.join(directory_name, ingested_file_name), ingested_filenames)
     
 
 def check_4_newdata(ingested_pth:str, data_dir: str) -> set:
@@ -173,14 +179,14 @@ def check_4_newdata(ingested_pth:str, data_dir: str) -> set:
     '''
     ##################Check and read new data
     #first, read ingestedfiles.txt
-    ingested_files = load_ingestedfiles(ingested_pth)
-    logger.info(f"Ingested file name list: {ingested_files}")
+    ingested_filenames = load_ingestedfiles(ingested_pth)
+    logger.info(f"Ingested file name list: {ingested_filenames}")
 
     #second, determine whether the source data folder has files that aren't listed in ingestedfiles.txt
-    current_files, _ = merge_directory(data_dir)
-    logger.info(f"Current file name list: {current_files}")
+    current_filenames, _ = merge_directory(data_dir)
+    logger.info(f"Current file name list: {current_filenames}")
 
-    return  set(current_files).difference(set(ingested_files))
+    return  set(current_filenames).difference(set(ingested_filenames))
 
 
 def merge_multiple_dataframe(
@@ -190,14 +196,16 @@ def merge_multiple_dataframe(
     dest_data_filename: str, 
     dest_ingest_filename: str):
     '''
-    Merge all files and corresponding dataset to one dataset, clean and save it for further processing. 
+    Merge all files and corresponding dataset to one dataset, clean and save it for further processing.
+    Merging only occurrs if there is a difference between the current directory structure in comparison 
+    to the already stored ingested files.
     '''
     # Merging the data
     df = pd.read_csv(dataset_pth) if (os.path.isfile(dataset_pth)) else None
     ingested_file_list_pth = os.path.join(dest_dir, dest_ingest_filename)
     diff_files = check_4_newdata(ingested_file_list_pth, src_dir)
     if len(diff_files) > 0:
-        logger.info(f"NEW Files detected {diff_files}. Merging...")
+        logger.info(f"New Files detected {diff_files}. Merging...")
         merged_files, merged_dataset = merge_directory(src_dir, True, df, load_ingestedfiles(ingested_file_list_pth))
         logger.info(f"Merged files in ingest_directory: {merged_files}")
 
