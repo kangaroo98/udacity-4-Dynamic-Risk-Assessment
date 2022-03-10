@@ -6,30 +6,34 @@ Date: 2022, March
 
 '''
 import os
-from xmlrpc.client import boolean
 import joblib
 import json
 from datetime import datetime
 
 from sklearn.metrics import f1_score
 
-from config import Score 
-from data import load_prepare_data
+from shared import Score 
+from shared import load_prepare_data
 
-# initialize logging
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
+
 # Exception handling
-from config import FileInvalid 
-
-#################Load config.json and get path variables
-with open('config.json','r') as f:
-    config = json.load(f) 
+from shared import FileInvalid 
 
 
-def get_model_scores(score_list_pth: str, version) -> list:
+def get_model_scores(score_list_pth: str, version: int) -> list:
     '''
     Read and return the list of all scores from score_list_pth,
     containing all scores captured during training and testing.
@@ -46,10 +50,9 @@ def get_model_scores(score_list_pth: str, version) -> list:
     
     return None
 
-
-def get_model_last_version(score_list_pth: str) -> int:
+def get_model_last_version_score(score_list_pth: str) -> Score:
     '''
-    Return the most recent version number.
+    Return the scor of the most recent version.
     '''
     # load versioned scores
     scores = load_score_list(score_list_pth)
@@ -60,8 +63,16 @@ def get_model_last_version(score_list_pth: str) -> int:
 
     rec_score = max(scores, key=lambda x:x['version']) 
     logger.info(f"Most recent version (list count: {len(scores)}): {rec_score}")
-    return rec_score['version']
+    
+    return rec_score
 
+def get_model_last_version(score_list_pth: str) -> int:
+    '''
+    Return the most recent version number.
+    '''
+    score = get_model_last_version_score(score_list_pth)
+    
+    return score['version']
 
 def load_score_list(score_list_pth: str) -> list:
     '''
@@ -87,7 +98,7 @@ def save_score_list(score_list_pth: str, score_list: list):
         json.dump(score_list, f)
 
 
-def version_score(score: Score, score_list_pth: str, new_version: boolean=True) -> int:
+def version_score(score: Score, score_list_pth: str, new_version: bool=True) -> int:
     '''
     Add a new score. By default the score is versioned with a new version number increment. 
     But if new_version is set to False the recent version number is used. This is used to 
@@ -110,7 +121,7 @@ def version_score(score: Score, score_list_pth: str, new_version: boolean=True) 
     scores.append(new_score)
     save_score_list(score_list_pth, scores)
 
-    logger.info(f"Score ({new_score}) added to list {scores} and saved in {score_list_pth}")
+    logger.info(f"Score ({new_score}) added to list (version_flag {new_version}) and saved in {score_list_pth}")
     return new_score['version']
 
 
@@ -123,10 +134,12 @@ def scoring(mode, model, X_test, y_test) -> Score:
 
     # scoring
     preds = model.predict(X_test)
-    score = Score(mode=mode, metric='F1', score=f1_score(y_test, preds), timestamp=datetime.now())
+    test=f1_score(y_test, preds)
+    score_res = Score(mode=mode, metric='F1', score=f1_score(y_test, preds), timestamp=datetime.now())
+    logger.info(f"Tested model with X_test {X_test} resulted in preds {preds} vs act {y_test} and score {test}")
 
     # write the score to file for further reference
-    return score
+    return score_res
 
 
 def score_model(model_path: str, data_pth: str) -> Score:
@@ -146,14 +159,18 @@ def score_model(model_path: str, data_pth: str) -> Score:
 
 if __name__ == '__main__':
     try:
+        init() 
+
+        last_version = get_model_last_version(os.path.join(config['output_model_path'], config['scores']))
+
         score_obj = score_model(
-            os.path.join(config['output_model_path'], config['model']),
+            os.path.join(config['output_model_path'], f"v{last_version}_{config['model']}"),
             os.path.join(config['test_data_path'], config['test_data'])
         )
-        logger.info(f"Tested model with F1 score {score_obj} saved as version: {score_obj['version']}")
 
-        # write the score to file for further reference
-        version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
+        # version the score to file for further reference
+        new_version = version_score(score_obj, os.path.join(config['output_model_path'], config['scores']), False)
+        logger.info(f"Tested model version {last_version} with F1 score {score_obj}. Score (mode: {score_obj['mode']}) saved as version: {new_version}")
 
     except Exception as err:
         print(f"Scoring Main Error: {err}")

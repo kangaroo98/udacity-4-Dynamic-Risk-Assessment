@@ -10,40 +10,28 @@ import numpy as np
 import timeit
 import os
 import json
-import joblib
 import subprocess
 
-from data import preprocess
 from training import train_model
 from ingestion import merge_multiple_dataframe
+from training import model_predictions
 
-# initialize logging
+from shared import Score
+
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
-# Exception handling
-
-##################Load config.json and get environment variables
-with open('config.json','r') as f:
-    config = json.load(f) 
-
-
-def model_predictions(model_pth: str, dataset: pd.DataFrame) -> (np.ndarray, np.ndarray):
-    '''
-    Function to get model prediction. Returns prediction array for each row of the 
-    input feature dataset.
-    '''
-    #read the deployed model and a test dataset, calculate predictions
-
-    # load the trained model
-    model = joblib.load(model_pth)
-    
-    # prepare data, no dataset split 
-    X, _, y, _ = preprocess(dataset)
-    
-    return model.predict(X), y
-    
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
+   
 
 def dataframe_summary(dataset: pd.DataFrame) -> dict:
     '''
@@ -71,25 +59,6 @@ def missing_data(dataset: pd.DataFrame) -> dict:
     na_percent = dataset.isna().sum()/len(dataset)    
     return na_percent.to_dict()
 
-
-def execution_time_v2() -> dict:
-    '''
-    Function to get timings of the ingestion and training processs. 
-    Returns a dict accessible by 'ingestion' re. 'training' key and the corresponding timings.
-    '''
-    #calculate timing of training.py and ingestion.py
-    start = timeit.default_timer()
-    merge_multiple_dataframe()
-    end_ingestion = timeit.default_timer()
-    train_model(
-            os.path.join(config['output_folder_path'], config['cleaned_data']),
-            os.path.join(config['output_model_path'], config['scores']), 
-            os.path.join(config['output_model_path'])
-    )
-    end_training = timeit.default_timer()
-
-    # return a list of 2 timing values in seconds
-    return {"ingestion":(end_ingestion-start), "training":(end_training-end_ingestion)}
 
 def execution_time() -> dict:
     '''
@@ -119,28 +88,36 @@ def outdated_packages_list():
     return outdated
 
 
+def diagnostics(testdata_pth: str, prod_depl_model_pth: str, test_dataset_pth: str):
+
+    # model predictions
+    df = pd.read_csv(testdata_pth)
+    preds, _ = model_predictions(prod_depl_model_pth, df)
+    logger.info(f"Predictions: {preds}")
+
+    # statistic summary
+    df = pd.read_csv(test_dataset_pth)
+    statistics = dataframe_summary(df)
+    logger.info(f"Dataset statistics: {statistics}")
+    na_percentage = missing_data(df)
+    logger.info(f"Missing data: {na_percentage}")
+    
+    # measure the execution of ingestion and training process (versioning and logging not considered ;-)
+    duration = execution_time()
+    logger.info(f"Execution time: {duration}")
+
+    outdated = outdated_packages_list()
+    logger.info(f"Check: {outdated}")
+    
+
+
 if __name__ == '__main__':
     try:
-        # model predictions
-        df = pd.read_csv(os.path.join(config['test_data_path'], config['test_data']))
-        preds, _ = model_predictions(os.path.join(config['prod_deployment_path'], config['model']), df)
-        logger.info(f"Predictions: {preds} pth: {os.path.join(config['test_data_path'], config['test_data'])}")
-
-        # statistic summary
-        df = pd.read_csv(os.path.join(config['output_folder_path'], config['cleaned_data']))
-        statistics = dataframe_summary(df)
-        logger.info(f"Dataset statistics: {statistics}")
-        na_percentage = missing_data(df)
-        logger.info(f"Missing data: {na_percentage}")
-        
-        # measure the execution of ingestion and training process (versioning and logging not considered ;-)
-        duration = execution_time()
-        logger.info(f"Execution time: {duration}")
-        duration = execution_time_v2()
-        logger.info(f"Execution time v2: {duration}")
-
-        #outdated = outdated_packages_list()
-        #logger.info(f"Check: {outdated}")
-    
+        init()
+        diagnostics(
+            os.path.join(config['test_data_path'], config['test_data']),
+            os.path.join(config['prod_deployment_path'], config['model']),
+            os.path.join(config['output_folder_path'], config['cleaned_data'])
+        )
     except Exception as err:
         print(f"Diagnositcs Main Error: {err}")   

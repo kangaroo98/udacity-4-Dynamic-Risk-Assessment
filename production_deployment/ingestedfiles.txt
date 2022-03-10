@@ -1,2 +1,4 @@
-./practicedata/dataset1.csv
-./practicedata/datasets/dataset2.csv
+practicedata/datasets/dataset2.csv
+sourcedata/dataset4.csv
+practicedata/dataset1.csv
+sourcedata/dataset3.csv

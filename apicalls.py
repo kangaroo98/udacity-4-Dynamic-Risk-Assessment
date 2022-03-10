@@ -4,28 +4,33 @@ import json
 import pandas as pd
 import pickle
 
-# initialize logging
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
+
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
 
 # Exception handling
 
 #Specify a URL that resolves to your workspace
 URL = "http://127.0.0.1:8000/"
 
-##################Load config.json and get environment variables
-with open('config.json','r') as f:
-    config = json.load(f) 
 
 def write_json(response, pth):
     with open(pth,'w') as f:
         json.dump(response, f)
 
 
-
 # #Call each API endpoint and store the responses
-
+init()
 # Prediction - POST
 df = pd.read_csv(os.path.join(config['test_data_path'], "testdata.csv"))
 response_post = requests.post(f"{URL}prediction", data=pickle.dumps(df))

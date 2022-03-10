@@ -1,0 +1,1 @@
+*/10 * * * * sudo /Users/oliver/opt/anaconda3/envs/udacity-3/bin/python3 /users/oliver/development/udacity-4-Dynamic-Risk-Assessment/fullprocess.py > /users/oliver/development/udacity-4-Dynamic-Risk-Assessment/stdout.log 2>&1

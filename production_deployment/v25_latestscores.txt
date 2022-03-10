@@ -1,1 +1,0 @@
-[{"version": 25, "mode": "train", "timestamp": "2022-03-07T11:06:21.562857", "metric": "F1", "score": 0.6666666666666666}, {"version": 25, "mode": "test", "timestamp": "2022-03-07T11:06:41.037933", "metric": "F1", "score": 0.5714285714285715}, {"version": 25, "mode": "test", "timestamp": "2022-03-07T11:06:44.167366", "metric": "F1", "score": 0.5714285714285715}]

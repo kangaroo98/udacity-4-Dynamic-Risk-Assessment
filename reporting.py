@@ -16,16 +16,30 @@ import os
 
 from diagnostics import model_predictions
 
-# initialize logging
+# initialization
 import logging 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open('config.json','r') as f:
+         config = json.load(f)
+    logger.info(f"Current working dir: {os.getcwd()}")
+    logger.info(f"Config dictionary: {config}")
+
 # Exception handling
 
 ###############Load config.json and get path variables
-with open('config.json','r') as f:
-    config = json.load(f) 
+config = {}
+def init():
+    global config
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    logger.info(f"Current working dir: {os.getcwd()}")
+    with open('config.json','r') as f:
+         config = json.load(f)
 
 
 def plot_confusion_matrix(save_pth: str, act: np.array, preds: np.array, ):
@@ -48,7 +62,7 @@ def plot_confusion_matrix(save_pth: str, act: np.array, preds: np.array, ):
     plt.savefig(save_pth)
 
 
-def score_model(model_pth: str, data_pth: str, plot_pth: str):
+def reporting(model_pth: str, data_pth: str, plot_pth: str):
     '''
     Create a confusion matrix based on a dataset stored in data_path. Plot saved in model_path.
     '''
@@ -57,12 +71,13 @@ def score_model(model_pth: str, data_pth: str, plot_pth: str):
     df = pd.read_csv(data_pth)
     preds, act = model_predictions(model_pth, df)
     plot_confusion_matrix(plot_pth, act, preds)
-    logger.info(f"Predictions: {preds} type: {type(preds)}, Actuals: {act} type: {type(act)}")
+    logger.info(f"Predictions: {preds}, Actuals: {act}")
 
 
 if __name__ == '__main__':
     try:
-        score_model(
+        init()
+        reporting(
             os.path.join(config['prod_deployment_path'], config['model']),
             os.path.join(config['test_data_path'], config['test_data']),
             os.path.join(config['output_model_path'], config['confusionmatrix'])
